@@ -1,0 +1,126 @@
+#!/bin/sh
+
+path=""
+className=""
+Array=""
+Param=""
+i=0
+
+if [ $# -eq 0 ]; then
+    path="."
+else
+    path=$1
+fi
+
+filehere=$(readlink -f $path)
+
+function writeHeader {
+    mkdir -p $path/src
+    mkdir -p $path/include
+    touch src/$className.cpp
+    touch include/$className.hpp
+    echo "/*
+** EPITECH PROJECT, 2020
+** ${filehere##*/}
+** File description:
+** $className.hpp
+*/
+
+#ifndef ${className^^}_HPP_
+    #define ${className^^}_HPP_
+
+    class ${className} {
+    public:
+        ${className}() = default;
+        ~${className}() = default;" > $path/include/$className.hpp
+
+j=0
+
+while [[ $j -lt ${#Array[@]} ]]; do
+    word=(${Array[$j]})
+    echo "        ${word[0]} get${word[1]^}(void);" >> $path/include/$className.hpp
+    echo "        void set${word[1]^}(const ${word[0]} ${word[1]});" >> $path/include/$className.hpp
+    j=$(($j+1))
+done
+echo "    private:" >> $path/include/$className.hpp
+
+j=0
+
+while [[ $j -lt ${#Array[@]} ]]; do
+    echo "        ${Array[$j]};" >> $path/include/$className.hpp
+    j=$(($j+1))
+done
+
+echo "    };
+
+#endif" >> $path/include/$className.hpp
+
+}
+
+function writeFile {
+    echo "/*
+** EPITECH PROJECT, 2020
+** ${filehere##*/}
+** File description:
+** $className.cpp
+*/
+
+#include \"../include/$className.hpp\"
+" > $path/src/$className.cpp
+
+j=0
+
+while [[ $j -lt ${#Array[@]} ]]; do
+    word=(${Array[$j]})
+    echo "${word[0]} $className::get${word[1]^}(void)
+{
+    return (this->${word[1]});
+}
+" >> $path/src/$className.cpp
+    echo "void $className::set${word[1]^}(const ${word[0]} ${word[1]})
+{
+    this->${word[1]} = ${word[1]};
+}
+" >> $path/src/$className.cpp
+    j=$(($j+1))
+done
+
+}
+
+
+function mainfunc() {
+    if [[ $line == "#end" ]]; then
+        writeHeader
+        writeFile
+        className=""
+        Param=""
+        Array=""
+        i=0
+    elif [[ $className == "" ]]; then
+        className=$line
+    else
+        Array[$i]=$line
+        i=$(($i+1))
+    fi
+}
+
+
+input=".classList"
+if [ -f $input ]
+then
+    while IFS= read -r line
+    do
+    mainfunc
+    done < "$input"
+else
+    echo "Need to create .classList file. Example:
+
+    Math
+    int test
+    #end
+    Dou
+    int num
+    std::string str
+    #end"
+    exit 84
+fi
