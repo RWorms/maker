@@ -32,7 +32,9 @@ function writeHeader {
     class ${className} {
     public:
         ${className}() = default;
-        ~${className}() = default;" > $path/include/$className.hpp
+        ~${className}() = default;
+        ${className}(const ${className} &data) = delete; 
+        ${className} &operator=(const ${className} &data) = delete;" > $path/include/$className.hpp
 
 j=0
 
